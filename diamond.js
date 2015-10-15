@@ -4,6 +4,7 @@ convert  file to JSON
 create the database
 read json into db
 write four methods
+create an AJAX webpage to utilise the web service verbs in Angular
 */
 
 // Import express to create and configure the HTTP server.
@@ -74,13 +75,38 @@ db.serialize(function(){
 // how to re open database?
 db.close();
 
+// middleware:
+// Add headers
+app.use(function (req, res, next) {
+
+    // Website you wish to allow to connect
+    res.setHeader('Access-Control-Allow-Origin', 'null'); // null or url
+
+    // Request methods you wish to allow
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
+
+    // Request headers you wish to allow
+    res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With,content-type');
+
+    // Set to true if you need the website to include cookies in the requests sent
+    // to the API (e.g. in case you use sessions)
+    res.setHeader('Access-Control-Allow-Credentials', true);
+
+    // Pass to next layer of middleware
+    next();
+});
+
 app.get('/', function(req, res) {
-  res.send("This is the Diamond API.\n");
+  var result = [];
+  result.push({id: 0, header: "Diamond Documentor", info: "Store all your diamonds with our easy to use solution."});
+
+  res.contentType('application/json');
+  res.send(JSON.stringify(result));
 });
 
 // When a user goes to /, return a small help string.
 app.get('/:id', function(req, res) {
-  var result = "";// = "info: ";
+  var result = [];// = "info: ";
   // open connection
   var db = new sqlite3.Database(file);
   db.get("SELECT rowid as id, price, carat, cut, colour, clarity, x, y, z, depth, tables FROM diamonds WHERE id = ?", req.params.id, function(err, row){
@@ -89,11 +115,15 @@ app.get('/:id', function(req, res) {
     // console.log("Row: " + row);
 
     if (row === undefined) {
-      result = "Could not find diamond with id: " + req.params.id + "\n";
+      result.push({message: "Could not find diamond with id: " + req.params.id});
+      res.contentType('application/json');
       res.send(result);
     }
     else{
-      result = "id:\t" + row.id + "\nprice:\t" + row.price + "\ncarat:\t" + row.carat + "\ncut:\t" + row.cut + "\ncolour:\t" + row.colour + "\nclarity:" + row.clarity + "\nx:\t" + row.x + "\ny:\t" + row.y + "\nz:\t" + row.z + "\ndepth:\t" + row.depth + "\ntable:\t" + row.tables + "\n";
+      //result = "id:\t" + row.id + "\nprice:\t" + row.price + "\ncarat:\t" + row.carat + "\ncut:\t" + row.cut + "\ncolour:\t" + row.colour + "\nclarity:" + row.clarity + "\nx:\t" + row.x + "\ny:\t" + row.y + "\nz:\t" + row.z + "\ndepth:\t" + row.depth + "\ntable:\t" + row.tables + "\n";
+      result.push({id: row.id, price: row.price, carat: row.carat, cut: row.cut, colour: row.colour, clarity: row.clarity, x: row.x, y: row.y, z: row.z, depth: row.depth, table: row.tables});
+
+      res.contentType('application/json');
       res.send(result);
     }
   });
